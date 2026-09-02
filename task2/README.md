@@ -35,7 +35,7 @@ An interactive **Gradio web app** is included, allowing users to explore differe
 | `Spending Score (1-100)` | Score assigned by the mall based on spending behavior |
 
 - **Records:** 200 customers
-- **Source:** [Mall Customer Dataset on Kaggle](https://www.kaggle.com/datasets/vjchoudhary7/customer-segmentation-tutorial-in-python-for-customers)
+- **Source:** [Mall Customer Dataset on Kaggle](https://www.kaggle.com/datasets/simtoor/mall-customers)
 
 ---
 
@@ -176,6 +176,24 @@ The project includes a **Gradio web app** launched from the final cell of the no
 | **Spending Bar Chart** | Horizontal bar chart showing average spending per cluster, sorted descending |
 
 The app launches with `share=True`, generating a public URL that works from any device — no local setup required for viewers.
+
+---
+
+## 📸 Screenshots
+
+### 📈 Elbow Method
+![Elbow Method](screenshots/elbowscreenshot.png)
+
+### 📊 Silhouette Score
+![Silhouette Score](screenshots/silhouttescreenshot.png)
+
+### 🎨 K-Means Cluster Visualization
+![K-Means Clusters](screenshots\kmeans_cluster_visualisation.png)
+### 🎨 DBSCAN Clustering
+![K-Means Clusters](screenshots\dbscanScreenshots.png)
+
+### 🖥️ Gradio Interactive App
+![Gradio App](screenshots/screenshot1.png)
 
 ---
 
