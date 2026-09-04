@@ -21,3 +21,6 @@ env/
 *.pt
 *.pth
 *.onnx
+
+#agents
+.agents/
