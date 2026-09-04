@@ -13,4 +13,11 @@ env/
 
 # Gradio local runtime cache
 .gradio/
-
+# Machine learning models
+*.joblib
+*.pkl
+*.h5
+*.keras
+*.pt
+*.pth
+*.onnx
