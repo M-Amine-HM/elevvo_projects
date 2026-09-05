@@ -24,3 +24,5 @@ env/
 
 #agents
 .agents/
+
+task-06-music-genre-classification/Data
