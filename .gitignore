@@ -26,3 +26,8 @@ env/
 .agents/
 
 task6-music-genre-classification/Data
+
+task8-traffic-sign-recognition/GTSDB_Train_and_Test
+task8-traffic-sign-recognition/runs/gtsdb_yolov8n
+runs/
+task8-traffic-sign-recognition/datasets
