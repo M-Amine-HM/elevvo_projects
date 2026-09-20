@@ -58,3 +58,4 @@ confidence-threshold slider to ignore low-quality detections.
 pip install -r requirements.txt
 python app.py
 ```
+author : Amine-hm
