@@ -1,7 +1,7 @@
 """Standalone Gradio app for Task 4 — Loan Approval Prediction.
 
 Loads the trained model, scaler, and label encoders saved by the training notebook
-(notebook.ipynb) into ./models/, then exposes the exact same Gradio interface as the notebook's
+(loan-approval-prediction.ipynb) into ./models/, then exposes the exact same Gradio interface as the notebook's
 final section. Fully self-contained — no notebook dependency.
 
 Run standalone locally from the task4 folder with:

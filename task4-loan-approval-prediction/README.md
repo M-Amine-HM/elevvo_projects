@@ -9,9 +9,12 @@
 A binary-classification pipeline that predicts whether a **loan application will be approved** from
 the applicant's income, CIBIL credit score, education/employment status, and personal asset
 holdings. Trained on the Kaggle **Loan Approval Prediction Dataset** (4,269 applications), the
-project compares a **Logistic Regression** against a **Decision Tree** — with the Decision Tree
-reaching **99.53% weighted F1** and a **100% recall** on the approved class. Because the target is
-imbalanced (62/38), performance is judged on **precision, recall, and F1** rather than accuracy.
+project compares a **Logistic Regression** against a **Decision Tree** — the winner is chosen by
+**5-fold stratified cross-validation** on the training fold, then scored **exactly once** on a
+held-out test set. The Decision Tree reaches **99.53% weighted F1** (0.994 on the minority class),
+beats a naive `cibil_score ≥ 600` rule by ~11 points, and is explained with real feature
+importances. Because the target is imbalanced (62/38), performance is judged on **per-class
+precision, recall, and F1** rather than accuracy alone.
 
 ---
 
@@ -23,7 +26,7 @@ imbalanced (62/38), performance is judged on **precision, recall, and F1** rathe
 | **Dataset** | [Loan Approval Prediction Dataset](https://www.kaggle.com/datasets/architsharma01/loan-approval-prediction-dataset) — 4,269 rows, 12 features |
 | **Target** | `loan_status` — `Approved` (62.2%) / `Rejected` (37.8%) |
 | **Approach** | Supervised binary classification with balanced class weights |
-| **Best Model** | Decision Tree — **99.53% weighted F1**, **99.25% precision**, **100% recall** |
+| **Best Model** | Decision Tree (5-fold CV-selected) — **99.53% weighted F1** on held-out test |
 | **Bonus** | SMOTE oversampling · Logistic Regression vs. Decision Tree | 
 
 ---
@@ -32,18 +35,19 @@ imbalanced (62/38), performance is judged on **precision, recall, and F1** rathe
 
 ```
 task4-loan-approval-prediction/
-├── notebook.ipynb              ← Main notebook (11 sections, fixed internship architecture)
+├── loan-approval-prediction.ipynb ← Main notebook (12 sections, fixed internship architecture)
 ├── app.py                      ← Standalone Gradio app (loads ./models/, zero notebook deps)
 ├── requirements.txt            ← Pinned dependencies
 ├── loan_approval_dataset.csv   ← Raw dataset
 ├── models/
-│   ├── best_model.pkl          ← Chosen Decision Tree (trained on scaled features)
+│   ├── best_model.pkl          ← CV-selected Decision Tree (trained on scaled features)
 │   ├── scaler.pkl              ← Fitted StandardScaler
 │   ├── encoder.pkl             ← Fitted LabelEncoders (education, self_employed)
 │   └── feature_names.pkl       ← Exact trained feature order (13 columns)
 ├── assets/
 │   ├── results.png             ← Confusion matrix (evaluation step)
-│   └── gradio_demo.png         ← Live interface screenshot
+│   ├── feature_importance.png  ← Gini feature importances (real, from the fitted tree)
+│   └── gradio_interface.png    ← Live interface screenshot
 └── README.md                   ← This file
 ```
 
@@ -80,7 +84,8 @@ task4-loan-approval-prediction/
 
 > Approval is the **majority** class, so accuracy is an unreliable gauge — a naive "always
 > approve" rule would already score ~62%. All conclusions below therefore lean on
-> precision/recall/F1.
+> precision/recall/F1. Caveat: at 62/38 the imbalance is mild, so weighted F1 is numerically close
+> to accuracy — the **per-class** numbers (minority class especially) are the real signal.
 
 ### EDA highlights
 
@@ -97,7 +102,7 @@ task4-loan-approval-prediction/
 ## 🔬 Full Pipeline
 
 ```
-Raw CSV → EDA → Preprocessing → Feature Engineering → Stratified Split → Model Training → Evaluation → SMOTE Bonus → Artifacts → Gradio Demo
+Raw CSV → EDA → Preprocessing → Feature Engineering → Stratified Split → CV Model Selection → Evaluation → Feature Importance & Sanity Check → SMOTE Bonus → Artifacts → Gradio Demo
 ```
 
 ### 1. Data loading
@@ -123,7 +128,9 @@ signal.
 
 ### 4. Train/test split
 Stratified **80/20** split (`random_state=42`) keeping the Approved/Rejected ratio in both folds.
-Train 3,415 · Test 854.
+Train 3,415 · Test 854. The held-out test split is used **exactly once**; model selection happens
+entirely inside the training fold via 5-fold CV (Section 7), so the reported test score is **not**
+the product of selection on the test set.
 
 ---
 
@@ -132,14 +139,26 @@ Train 3,415 · Test 854.
 ### Logistic Regression (baseline)
 - **Why:** interpretable, scalable linear baseline to establish a floor.
 - **Setup:** `class_weight='balanced'`, `max_iter=1000`, on standardized features.
-- **Result:** 92.27% weighted F1 — decent, but the linear decision boundary misses the sharp
+- **CV result:** 0.9186 mean weighted F1 (±0.0158) over 5 folds.
+- **Test result:** 92.31% weighted F1 — decent, but the linear decision boundary misses the sharp
   non-linear CIBIL cutoff.
+
+### Model selection (5-fold stratified CV, training fold only)
+The scaler is re-fitted inside every CV fold, so no held-out-fold or test-set information leaks
+into the CV score. The two families are compared purely on mean weighted F1:
+
+| Model | Mean CV weighted-F1 | ± std |
+|---|---|---|
+| Logistic Regression | 0.9186 | 0.0158 |
+| **Decision Tree** | **0.9956** | 0.0038 |
+
+The Decision Tree wins and is selected — **the test set has not been touched yet**.
 
 ### Decision Tree (final)
 - **Why:** captures the non-linear interaction between CIBIL score, income, and assets; built
   with `class_weight='balanced'` and `min_samples_leaf=10` to resist overfitting.
-- **Result:** **99.53% weighted F1**, **100% recall** on approved loans — a near-clean split on
-  the test set.
+- **Test result:** **99.53% weighted F1** (held-out test, evaluated once, after CV selection),
+  minority-class F1 **0.994**, majority-class recall 100%.
 - **Why it won:** the CIBIL-score effect is strongly threshold-like (approved ≈ >600), which a
   tree partitions exactly and a linear model can only approximate.
 
@@ -147,12 +166,31 @@ Train 3,415 · Test 854.
 
 ## 📈 Results
 
-### Test set (854 applications; 323 Rejected / 531 Approved)
+### Selection protocol (no selection-on-test)
 
-| Model | Accuracy | Precision | Recall | F1 (Approved) | Weighted F1 |
-|---|---|---|---|---|---|
-| Logistic Regression | 0.9227 | 0.9515 | 0.9228 | 0.9369 | 0.9231 |
-| **Decision Tree (final)** | **0.9953** | **0.9925** | **1.0000** | **0.9962** | **0.9953** |
+Before any test-set score is reported, the two model families are compared by **5-fold stratified
+cross-validation on the training fold only** (scaling re-fitted inside every fold):
+
+| Model | Mean CV weighted-F1 | ± std |
+|---|---|---|
+| Logistic Regression | 0.9186 | 0.0158 |
+| **Decision Tree** | **0.9956** | 0.0038 |
+
+The Decision Tree is selected on those CV means; **only then** is it trained on the full training
+fold and scored **once** on the held-out test set (854 apps; 323 Rejected / 531 Approved).
+
+### Final model — Decision Tree (held-out test, single evaluation)
+
+| Class | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| **Rejected** (minority) | 1.0000 | 0.9876 | **0.9938** | 323 |
+| Approved (majority) | 0.9925 | 1.0000 | 0.9962 | 531 |
+| **Weighted F1** | | | **0.9953** | 854 |
+
+Weighted F1 (0.9953) sits numerically close to accuracy because the target is only mildly
+imbalanced (62/38) — the per-class row above is the honest signal. The model does **not** merely
+echo "most people get approved": it keeps minority (Rejected) recall at **0.9876**, mislabeling
+just 4 of 323 minority applications, and catches all 531 majority applications.
 
 ### Confusion matrix — Decision Tree (test set)
 
@@ -163,7 +201,9 @@ Train 3,415 · Test 854.
 
 ![results](assets/results.png)
 
-### Feature importance (Decision Tree, Gini)
+### Feature importance (Decision Tree, Gini — real values, computed & plotted in notebook Section 9)
+
+![feature importance](assets/feature_importance.png)
 
 | Feature | Importance |
 |---|---|
@@ -172,8 +212,21 @@ Train 3,415 · Test 854.
 | `loan_term` | 0.051 |
 | All others | < 0.005 |
 
-> The model effectively operationalizes what banks already weigh: **credit history first, loan
-> burden second.** `cibil_score` alone is ~86% of the tree's importance.
+These numbers are produced by `best_model.feature_importances_` in the notebook — the table above
+matches the code output exactly. The model effectively operationalizes what banks already weigh:
+**credit history first, loan burden second.** `cibil_score` alone is ~86% of the tree's importance.
+
+### Sanity-check baseline (`cibil_score >= 600 → Approved`)
+
+| Model | Accuracy | Weighted F1 | Minority (Rejected) F1 |
+|---|---|---|---|
+| Rule baseline | 0.8841 | 0.8858 | 0.87 |
+| **Decision Tree** | **0.9953** | **0.9953** | **0.99** |
+
+The naive rule captures CIBIL's dominant signal but **rejects 97 genuinely approvable
+applications** (majority recall drops to 0.82) because it ignores income/loan/asset interactions.
+The tree corrects all of those while keeping minority recall at 0.99 — proof it is doing more than
+thresholding a single feature.
 
 ---
 
@@ -225,7 +278,7 @@ python app.py
 Then open the printed local URL (default `http://127.0.0.1:7860`).
 
 ### Run the notebook
-1. Open `notebook.ipynb` in Jupyter / VS Code.
+1. Open `loan-approval-prediction.ipynb` in Jupyter / VS Code.
 2. Ensure `loan_approval_dataset.csv` sits next to the notebook (it does).
 3. Run all cells (**Kernel → Restart & Run All**). The final section launches the same interface
    with `demo.launch(share=True)` — use the public link for a screenshot.
