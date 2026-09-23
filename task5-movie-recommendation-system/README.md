@@ -8,9 +8,10 @@
 
 A collaborative-filtering pipeline that recommends movies a user will like by comparing their
 taste against users who rate movies similarly. Built on the **MovieLens** dataset, the project
-compares **user-based CF**, **item-based CF**, and **SVD matrix factorization** on **precision@K** —
-with SVD coming out on top (0.296 at K=5). A live Gradio demo lets you enter any user ID and get a
-ranked list of unseen, highly-scored movies.
+compares **user-based CF**, **item-based CF**, and **SVD matrix factorization** against a
+non-personalized **most-popular baseline** on **precision@K** — with SVD coming out on top (0.296
+at K=5) on every evaluation split. A live Gradio demo lets you enter any user ID and get a ranked
+list of unseen, highly-scored movies.
 
 ---
 
@@ -44,7 +45,8 @@ task5-movie-recommendation-system/
 │   └── movies_info.pkl       ← movieId → title/genres (display)
 ├── assets/
 │   ├── results.png           ← Precision@K for the primary (user-based) method
-│   └── precision_comparison.png  ← Three-method comparison chart
+│   ├── precision_comparison.png  ← Comparison chart (3 CF methods + most-popular baseline)
+│   └── gradio_demo.png       ← Screenshot of the live interface
 └── README.md                 ← This file
 ```
 
@@ -84,13 +86,16 @@ memory blow-up for item–item/SVD with no recommender value.
 - **Recommendation logic (user-based):** score each unseen movie as the **similarity-weighted
   *sum*** of neighbors' ratings — a sum rewards *consensus* (many similar users liking a movie),
   whereas a weighted *average* lets one obscure neighbor's 5.0 outrank a movie 50 similar users
-  love. This single choice moved Precision@5 from ~0.006 → 0.273 on the same held-out split.
+  love. This single choice moved Precision@5 from **0.004 → 0.273** on the same held-out split
+  (mean variant 0.0037 vs sum 0.2730 — reproduced cell-for-cell in notebook section **8.1**).
   Rank and return the top-K.
 
 ## Results
 
 Held-out evaluation: for each of 600 eligible users, 20% of their **high-rated (≥ 4.0)** movies
-are hidden; a recommendation counts as a hit if it appears in that hidden set.
+are hidden; a recommendation counts as a hit if it appears in that hidden set. The split is random
+(rather than temporal): a temporal split would evaluate the harder, more realistic task of
+predicting *future* ratings, but would cold-start any user whose recent history gets truncated.
 
 **Primary method — User-based CF (cosine, k=50):**
 
@@ -102,20 +107,34 @@ are hidden; a recommendation counts as a hit if it appears in that hidden set.
 
 ![results](assets/results.png)
 
-**All three methods** (same split, same Precision@K protocol):
+**All methods + non-personalized baseline** (same split, same Precision@K protocol):
 
-| K | User-based CF | Item-based CF | SVD (k=30) |
-|---|---|---|---|
-| 5  | 0.2730 | 0.2020 | **0.2963** |
-| 10 | 0.2132 | 0.1613 | **0.2303** |
-| 20 | 0.1625 | 0.1276 | **0.1692** |
+| K | User-based CF | Item-based CF | SVD (k=30) | Most popular (baseline) |
+|---|---|---|---|---|
+| 5  | 0.2730 | 0.2020 | **0.2963** | 0.1657 |
+| 10 | 0.2132 | 0.1613 | **0.2303** | 0.1297 |
+| 20 | 0.1625 | 0.1276 | **0.1692** | 0.1022 |
 
 ![precision comparison](assets/precision_comparison.png)
 
-> **Takeaway:** SVD wins at every K — it compresses the sparse interaction matrix into 30 latent
-> factors that capture global structure (genre blocks, popularity bias) that raw user-item
-> similarity cannot see. User-based CF is second and is strongest at smaller K; item-based CF
-> trails because the movie–movie similarity signal is even sparser.
+> **Takeaway:** SVD performs best at every K — it compresses the sparse interaction matrix into
+> 30 latent factors that capture global structure (genre blocks, popularity bias) that raw
+> user-item similarity cannot see. The margin over user-based CF is modest but consistent: across
+> 5 independent random splits SVD wins 5/5 (P@5 = 0.289 ± 0.008 vs 0.269 ± 0.005), bigger than
+> split-to-split variance even though per-user results spread widely (± ~0.26). User-based CF is
+> second and strongest at smaller K; item-based CF trails because the movie–movie similarity
+> signal is even sparser. The non-personalized most-popular baseline (0.166 @ K=5) trails every
+> learned method, confirming the collaborative signal adds real value beyond raw popularity.
+
+**Robustness across random splits** (5 seeds, P@5; notebook §9.4):
+
+| Method | Mean ± std | Per-seed P@5 |
+|---|---|---|
+| User-based CF | 0.2693 ± 0.0053 | 0.2730 · 0.2660 · 0.2767 · 0.2640 · 0.2670 |
+| SVD (k=30) | 0.2885 ± 0.0083 | 0.2963 · 0.2827 · 0.2980 · 0.2793 · 0.2860 |
+
+SVD beats user-based CF on all 5 seeds by 0.015–0.023 in P@5, so the advantage is consistent
+across splits rather than a single-split artifact.
 
 ## Interface
 
