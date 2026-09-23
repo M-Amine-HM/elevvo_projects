@@ -1,0 +1,9 @@
+names:
+- prohibitory
+- danger
+- mandatory
+- other
+nc: 4
+path: /kaggle/working/dataset_remapped
+train: Train/images
+val: Test/images

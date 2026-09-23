@@ -1,49 +1,48 @@
-path: D:\summerToTheFinal\elevvo\elevvo_projects\task8-traffic-sign-recognition\datasets
-train: train/images
-val: val/images
-test: test/images
-nc: 43
 names:
-  0: Speed limit (20)
-  1: Speed limit (30)
-  2: Speed limit (50)
-  3: Speed limit (60)
-  4: Speed limit (70)
-  5: Speed limit (80)
-  6: End of speed limit (80)
-  7: Speed limit (100)
-  8: Speed limit (120)
-  9: No overtaking
-  10: No overtaking (trucks)
-  11: Priority at next intersection
-  12: Priority road
-  13: Give way
-  14: Stop
-  15: No entry
-  16: No entry (trucks)
-  17: Danger
-  18: Bend left
-  19: Bend right
-  20: Double bend
-  21: Uneven road
-  22: Slippery road
-  23: Road narrows
-  24: Roadworks
-  25: Traffic signals
-  26: Pedestrians
-  27: Children crossing
-  28: Cyclists crossing
-  29: Snow/Ice
-  30: Wild animals
-  31: End of all restrictions
-  32: Turn right
-  33: Turn left
-  34: Ahead only
-  35: Ahead or right
-  36: Ahead or left
-  37: Roundabout
-  38: End of no overtaking
-  39: End of no overtaking (trucks)
-  40: Direction (left)
-  41: Direction (right)
-  42: Other/Misc
+- speed limit 20
+- speed limit 30
+- speed limit 50
+- speed limit 60
+- speed limit 70
+- speed limit 80
+- end speed limit 80
+- speed limit 100
+- speed limit 120
+- no overtaking
+- no overtaking trucks
+- priority road next
+- priority road
+- give way
+- stop
+- no vehicles
+- no trucks
+- no entry
+- caution
+- dangerous curve left
+- dangerous curve right
+- double curve
+- bumpy road
+- slippery road
+- narrow road right
+- roadworks
+- traffic signals
+- pedestrians
+- children
+- bicycles
+- ice/snow
+- wild animals
+- end restrictions
+- turn right ahead
+- turn left ahead
+- go straight ahead
+- go straight or right
+- go straight or left
+- keep right
+- keep left
+- roundabout
+- end no overtaking
+- end no overtaking trucks
+nc: 43
+path: /kaggle/input/datasets/icebearogo/german-traffic-sign-detection-gtsdb-dataset/GTSDB_Train_and_Test
+train: Train/images
+val: Test/images
