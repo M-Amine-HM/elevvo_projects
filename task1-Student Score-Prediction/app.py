@@ -1,12 +1,11 @@
 """Standalone Gradio inference app for the Student Exam Score predictor.
 
 Loads the trained Option-7 linear model and the single encoding map that were saved by the
-training notebook (task1/student_performance_analysis.ipynb), then exposes a Gradio UI with the
+training notebook (student_performance_analysis.ipynb), then exposes a Gradio UI with the
 exact same widgets as the notebook's Section-12 demo.
 
 Run standalone locally from the task1 directory with:
-    python app/app.py
-or from anywhere if the notebook's `models/` folder sits alongside this app folder.
+    python app.py
 """
 
 import os
@@ -20,10 +19,11 @@ import gradio as gr
 def _base_dir():
     """Return the directory that contains the notebook's `models/` folder.
 
-    This is the parent of the `app/` directory that holds this script, so the app works no matter
-    what the current working directory is (e.g. when Hugging Face Spaces runs it).
+    The app now sits at the task root (next to `models/`), so this is simply the folder that
+    holds this script. The app therefore works no matter what the current working directory is
+    (e.g. when Hugging Face Spaces runs it).
     """
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 # Load the saved artifacts (single source of truth): the fitted Option-7 LinearRegression and the

@@ -1,0 +1,5 @@
+# These two artifacts are intentional deliverables for the deployed app.
+# The repository-root .gitignore ignores `*.pkl` globally; un-ignore these explicitly so the
+# trained model ships with the task.
+!best_model.pkl
+!encode_maps.pkl
