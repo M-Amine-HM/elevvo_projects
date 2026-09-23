@@ -1,0 +1,4 @@
+# Root .gitignore excludes all *.joblib; re-include the shipped artifacts.
+!best_rf_model.joblib
+!best_xgb_model.joblib
+!scaler.joblib

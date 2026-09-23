@@ -1,0 +1,37 @@
+[
+  {
+    "Model":"Logistic Regression",
+    "Accuracy":0.5987,
+    "Macro F1":0.5069,
+    "Weighted F1":0.6275,
+    "Kappa":0.4299
+  },
+  {
+    "Model":"Random Forest",
+    "Accuracy":0.955,
+    "Macro F1":0.9256,
+    "Weighted F1":0.9548,
+    "Kappa":0.9275
+  },
+  {
+    "Model":"XGBoost",
+    "Accuracy":0.8836,
+    "Macro F1":0.8649,
+    "Weighted F1":0.885,
+    "Kappa":0.8172
+  },
+  {
+    "Model":"RF (Tuned)",
+    "Accuracy":0.954,
+    "Macro F1":0.9272,
+    "Weighted F1":0.9539,
+    "Kappa":0.9261
+  },
+  {
+    "Model":"XGBoost (Tuned)",
+    "Accuracy":0.8938,
+    "Macro F1":0.8782,
+    "Weighted F1":0.8947,
+    "Kappa":0.8326
+  }
+]
