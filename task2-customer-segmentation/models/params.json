@@ -1,0 +1,9 @@
+{
+  "feature_columns": [
+    "Annual Income (k$)",
+    "Spending Score (1-100)"
+  ],
+  "optimal_k": 5,
+  "dbscan_eps": 0.35,
+  "dbscan_min_samples": 5
+}

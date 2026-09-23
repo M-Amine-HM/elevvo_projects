@@ -1,0 +1,5 @@
+# The repo-root .gitignore ignores *.pkl / *.joblib globally.
+# These saved artifacts ARE the deliverable, so re-allow them under models/.
+!kmeans.pkl
+!scaler.pkl
+!dbscan.pkl
