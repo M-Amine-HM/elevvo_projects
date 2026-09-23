@@ -1,11 +1,17 @@
-"""Standalone Gradio app for Task 6 — Music Genre Classification.
+"""Standalone Gradio app for Task 6 - Music Genre Classification.
 
-Loads the trained tabular XGBoost model from ./models/ (saved by notebook.ipynb) and
-exposes a Gradio interface (Blocks-based). The model is fed classic GTZAN audio
-features (MFCCs, chroma, spectral centroid/bandwidth, rolloff, zero-crossing rate,
-harmonic/percussive energy, tempo) reproduced from the uploaded .wav in the exact
-column order the model was trained on (feature_names.pkl). The mel-spectrogram image
-is shown in the UI as a visual preview only — it is no longer model input.
+Loads the trained tabular XGBoost model from ./models/ (saved by notebook.ipynb,
+selected on the track-grouped validation split in section 9A) and exposes a
+Gradio interface (Blocks-based). The model is fed classic GTZAN audio features
+(MFCCs, chroma, spectral centroid/bandwidth, rolloff, zero-crossing rate,
+harmonic/percussive energy, tempo) reproduced from the uploaded .wav with the
+same settings (n_fft=2048, hop_length=512) and in the exact column order the
+model was trained on (feature_names.pkl), so the serving pipeline matches the
+training pipeline of features_3_sec.csv exactly.
+
+The mel-spectrogram image is shown in the UI as a visual preview only - it is
+not model input. The CNN and transfer-learning Keras models in ./models/ are
+kept for offline comparison and are intentionally not served.
 
 Run standalone locally from the task folder with:
     python app.py
