@@ -22,6 +22,10 @@ env/
 *.pth
 *.onnx
 
+# Task 8 deliverables: shipped weights are part of the Task 8 deliverable
+!task8-traffic-sign-recognition/models/*.pt
+!task8-traffic-sign-recognition/models/*.onnx
+
 #agents
 .agents/
 

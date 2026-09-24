@@ -29,6 +29,35 @@ START_DATE = pd.Timestamp(feat_config["start_date"])
 STORE_LIST = list(range(1, 46))
 DEPT_LIST = list(range(1, 100))
 
+DATA_DIR = os.path.join(BASE_DIR, "data")
+DEFAULT_FORECAST_DATE = "2012-09-21"
+
+# Real historical weekly sales per (Store, Dept) — pre-fills the app so the
+# lag/rolling features reproduce exactly what the model was trained on.
+HISTORY_MAP = {}
+try:
+    _train = pd.read_csv(os.path.join(DATA_DIR, "train.csv"),
+                         parse_dates=["Date"])
+    for (_store, _dept), _grp in _train.sort_values("Date").groupby(["Store", "Dept"]):
+        HISTORY_MAP[(_store, _dept)] = (
+            _grp["Date"].tolist(), _grp["Weekly_Sales"].tolist())
+    del _train
+except Exception:
+    pass
+
+
+def recent_history(store, dept, target_date, n=13):
+    """The last `n` observed weekly sales for (store, dept) before target_date."""
+    dates, sales = HISTORY_MAP.get((int(store), int(dept)), ([], []))
+    target = pd.Timestamp(target_date)
+    prior = [s for d, s in zip(dates, sales) if pd.Timestamp(d) < target]
+    return prior[-n:]
+
+
+def parse_history(value):
+    """Parse comma-separated weekly sales (most recent LAST) into floats."""
+    return [float(x.strip()) for x in str(value).split(",") if x.strip()]
+
 BG = "#FFFFFF"
 BLACK = "#0A0A0A"
 YELLOW = "#FFD700"
@@ -41,26 +70,45 @@ def predict_sales(
     store, dept, is_holiday, temperature, fuel_price,
     markdown1, markdown2, markdown3, markdown4, markdown5,
     cpi, unemployment, store_type, size,
-    last_week_sales, two_weeks_ago, three_weeks_ago,
-    month, week_of_year, year,
+    history_text, forecast_date,
 ):
-    date = pd.Timestamp(f"{int(year)}-{int(month):02d}-25")
-    days_since = (date - START_DATE).days
     store_type_code = int(store_type.split("(")[1].rstrip(")"))
 
-    avg3 = (last_week_sales + two_weeks_ago + three_weeks_ago) / 3
+    # The data are Friday-dated weekly records: snap to the Friday of the ISO
+    # week so calendar features always match what training saw (day_of_week 4).
+    friday = pd.Timestamp(str(forecast_date)[:10])
+    iso_year, iso_week, _ = friday.isocalendar()
+    friday = pd.Timestamp.fromisocalendar(iso_year, iso_week, 5)
+    day_of_week = friday.dayofweek          # always Friday == 4 in this dataset
+    month = friday.month
+    week_of_year = friday.isocalendar().week
+    year = friday.year
+    days_since = (friday - START_DATE).days
+
+    hist = parse_history(history_text)
+    if len(hist) < 3:
+        raise gr.Error(
+            "Provide at least 3 prior weekly sales values "
+            "(most recent LAST, comma-separated).")
+    # Lags are the 1/2/3 most recent observed weeks; the rolling features
+    # average the trailing 4/8/13 weeks (shift(1)/min_periods=1 semantics).
+    lag_1, lag_2, lag_3 = hist[-1], hist[-2], hist[-3]
+    rolling_4w = float(np.mean(hist[-4:]))
+    rolling_8w = float(np.mean(hist[-8:]))
+    rolling_13w = float(np.mean(hist[-13:]))
+
     feature_values = [
         store, dept, int(is_holiday), temperature, fuel_price,
         markdown1, markdown2, markdown3, markdown4, markdown5,
         cpi, unemployment, store_type_code, size,
-        0, month, week_of_year, year, days_since,
-        last_week_sales, two_weeks_ago, three_weeks_ago,
-        avg3, avg3, avg3,
+        day_of_week, month, week_of_year, year, days_since,
+        lag_1, lag_2, lag_3, rolling_4w, rolling_8w, rolling_13w,
     ]
     assert len(feature_values) == len(feat_names)
     input_df = pd.DataFrame([feature_values], columns=feat_names)
     prediction = float(model.predict(input_df)[0])
 
+    last_week_sales = lag_1
     trend_pct = (prediction - last_week_sales) / \
         max(abs(last_week_sales), 1) * 100
     trend_symbol = "▲" if trend_pct >= 0 else "▼"
@@ -68,7 +116,7 @@ def predict_sales(
 
     # Chart
     weeks = ["W−3", "W−2", "W−1", "FORECAST"]
-    values = [three_weeks_ago, two_weeks_ago, last_week_sales, prediction]
+    values = [hist[-3], hist[-2], last_week_sales, prediction]
     hatches = ["////", "////", "////", "XXXX"]
     fcolors = [GREY_LT, GREY_LT, GREY_LT, YELLOW]
 
@@ -424,21 +472,21 @@ with gr.Blocks(css=CUSTOM_CSS, title="Sales Forecast — Brutalist") as demo:
         # ── RIGHT — Outputs ────────────────────────────────────────────────
         with gr.Column(scale=4, min_width=340):
 
-            # SALES HISTORY — 3 across
+            # SALES HISTORY — last 13 weeks, most recent LAST
             gr.HTML('<div class="section-label">SALES HISTORY</div>')
-            with gr.Row():
-                three_weeks = gr.Number(value=23000, label="3 Wks Ago ($)")
-                two_weeks_ago = gr.Number(value=24000, label="2 Wks Ago ($)")
-                last_week = gr.Number(value=25000, label="Last Wk ($)")
+            history_text = gr.Textbox(
+                value=", ".join(
+                    f"{v:.0f}" for v in recent_history(1, 1, DEFAULT_FORECAST_DATE)),
+                label="Last 13 Weekly Sales ($) — most recent LAST, "
+                      "comma-separated",
+                lines=3)
 
-            # FORECAST PERIOD — sliders inline, 3 cols
+            # FORECAST PERIOD — single date; snapped to that ISO week's Friday
             gr.HTML('<div class="section-label">FORECAST PERIOD</div>')
             with gr.Row():
-                month = gr.Slider(1,    12,   value=11,
-                                  step=1, label="Month")
-                week_of_year = gr.Slider(
-                    1,    52,   value=45,   step=1, label="Week")
-                year = gr.Slider(2010, 2014, value=2012, step=1, label="Year")
+                forecast_date = gr.DateTime(
+                    value=DEFAULT_FORECAST_DATE, include_time=False,
+                    type="string", label="Forecast Week (Fri)")
 
             gr.HTML('<div class="section-label">RESULT</div>')
             prediction_out = gr.Number(label="Forecasted Weekly Sales ($)")
@@ -454,8 +502,7 @@ with gr.Blocks(css=CUSTOM_CSS, title="Sales Forecast — Brutalist") as demo:
             store, dept, is_holiday, temperature, fuel_price,
             md1, md2, md3, md4, md5,
             cpi, unemployment, store_type, size,
-            last_week, two_weeks_ago, three_weeks,
-            month, week_of_year, year,
+            history_text, forecast_date,
         ],
         outputs=[prediction_out, trend_out, chart_out],
     )
