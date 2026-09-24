@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.venv/
+venv/
+env/
+.gradio/
+runs/
+frontend/
+tests/
+assets/
+README.md
+docker-compose.yml
+.github/
+*.ipynb

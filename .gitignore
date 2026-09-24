@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+.pytest_cache/
 
 # Virtual environments
 .venv/
@@ -25,6 +26,10 @@ env/
 # Task 8 deliverables: shipped weights are part of the Task 8 deliverable
 !task8-traffic-sign-recognition/models/*.pt
 !task8-traffic-sign-recognition/models/*.onnx
+
+# Task 10 deliverables: committed model artifacts are required for the
+# dockerized API image and for the GitHub Actions test job
+!task-10-mlops-pipeline/models/*.joblib
 
 #agents
 .agents/

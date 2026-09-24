@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Gradio local runtime cache
+.gradio/
+
+# Docker / tooling
+docker-compose.override.yml
+docker-compose.prod.yml
+
+# Logs & OS junk
+*.log
+.DS_Store
+Thumbs.db
