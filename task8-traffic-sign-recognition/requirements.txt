@@ -1,0 +1,13 @@
+ultralytics==8.3.22
+torch==2.4.1
+torchvision==0.19.1
+opencv-python==4.10.0.84
+numpy==2.0.2
+matplotlib==3.10.8
+pillow==10.4.0
+gradio==6.26.0
+pandas==2.3.3
+PyYAML==6.0.1
+onnx==1.23.0
+onnxruntime==1.30.0
+onnxslim==0.1.96

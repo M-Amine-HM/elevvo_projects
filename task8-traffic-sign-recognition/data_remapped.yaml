@@ -4,6 +4,5 @@ names:
 - mandatory
 - other
 nc: 4
-path: /kaggle/working/dataset_remapped
-train: Train/images
-val: Test/images
+train: dataset_remapped/Train/images
+val: dataset_remapped/Test/images

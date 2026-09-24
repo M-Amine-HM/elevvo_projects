@@ -43,6 +43,5 @@ names:
 - end no overtaking
 - end no overtaking trucks
 nc: 43
-path: /kaggle/input/datasets/icebearogo/german-traffic-sign-detection-gtsdb-dataset/GTSDB_Train_and_Test
-train: Train/images
-val: Test/images
+train: dataset/Train/images
+val: dataset/Test/images
